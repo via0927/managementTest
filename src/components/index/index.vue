@@ -23,14 +23,6 @@ export default {
     }
 }
 </script><style lang="scss" scoped>
-    *{
-        padding: 0;
-        margin: 0;
-
-    }
-    body{
-        // background: rebeccapurple;
-    }
   .container{
     //   background: red;
       width: 100%;
@@ -49,9 +41,6 @@ export default {
       .starts{
           display: inline;
       }
-  }
-  .index-contain{
-
   }
 </style>
 

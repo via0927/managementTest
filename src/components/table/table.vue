@@ -3,28 +3,29 @@
     <el-row>
       <el-col :span="24">
         <!-- 表单 -->
-        <el-form :inline="true"  class="demo-form-inline">
+        <el-form :inline="true" :model="formInline" class="demo-form-inline">
           <el-form-item label="姓名">
-            <el-input placeholder="姓名" style="width:140px;"></el-input>
+            <el-input placeholder="姓名" v-model="formInline.user.name" style="width:140px;"></el-input>
           </el-form-item>
           <!-- //时间 -->
-          <el-form-item label="活动时间">
+          <el-form-item label="年份">
             <el-col>
-              <el-date-picker type="date" placeholder="选择日期"  style="width: 100%;"></el-date-picker>
+              <el-date-picker type="year" v-model="formInline.user.date" align="right" placeholder="选择年份"  style="width: 100%;"></el-date-picker>
             </el-col>
           </el-form-item>
           <!-- 地址 -->
           <el-form-item label="地址">
             <el-cascader
-              :options="options1"
-              :show-all-levels="false"
+              expand-trigger="hover"
+              :options="options"
+              v-model="formInline.user.address"
             ></el-cascader>
           </el-form-item>
           <!-- 籍贯 -->
           <el-form-item label="籍贯">
-            <el-select v-model="value" clearable placeholder="请选择">
+            <el-select v-model="formInline.user.place" clearable placeholder="请选择">
               <el-option
-                v-for="item in options"
+                v-for="item in places"
                 :key="item.value"
                 :label="item.label"
                 :value="item.value">
@@ -58,7 +59,7 @@
             label="地址">
           </el-table-column>
           <el-table-column label="操作">
-            <template scope="scope">
+            <template slot-scope="scope">
               <el-button type="primary" size="small" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
               <el-button type="danger" size="small" @click="handleDelete(scope.$index, scope.row)">删除</el-button>
             </template>
@@ -76,256 +77,119 @@
         </div>
       </el-col>
     </el-row>
-      
+      <!-- 修改的弹框 -->
+    <el-dialog title="修改个人信息" :visible.sync="dialogFormVisible">
+      <el-form :model="form">
+        <el-form-item label="姓名" :label-width="formLabelWidth">
+          <el-input v-model="form.name" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="地址" :label-width="formLabelWidth">
+          <el-input v-model="form.address" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="出生日期" :label-width="formLabelWidth">
+          <el-date-picker
+             v-model="form.date"
+            type="date"
+            placeholder="选择日期">
+          </el-date-picker>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormVisible = false">取 消</el-button>
+        <el-button type="primary" @click="changeValue()" :loading="editLoading">确 定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
+ const ERR_OK = "000";
 export default {
   name: 'Table',
   data () {
     return {
+      editLoading:false,
+      dialogFormVisible:false,
+      formInline:{
+        user:{
+          name:"",
+          date:"",
+          address:[],
+          place:''
+        }
+      },
       currentPage:4,
       tableData: [],
-      input:'',
-      options: [{
-          value: '选项1',
-          label: '黄金糕'
-        }, {
-          value: '选项2',
-          label: '双皮奶'
-        }, {
-          value: '选项3',
-          label: '蚵仔煎'
-        }, {
-          value: '选项4',
-          label: '龙须面'
-        }, {
-          value: '选项5',
-          label: '北京烤鸭'
-        }],
-        value: '',
-         options1: [{
-          value: 'zhinan',
-          label: '指南',
-          children: [{
-            value: 'shejiyuanze',
-            label: '设计原则',
-            children: [{
-              value: 'yizhi',
-              label: '一致'
-            }, {
-              value: 'fankui',
-              label: '反馈'
-            }, {
-              value: 'xiaolv',
-              label: '效率'
-            }, {
-              value: 'kekong',
-              label: '可控'
-            }]
-          }, {
-            value: 'daohang',
-            label: '导航',
-            children: [{
-              value: 'cexiangdaohang',
-              label: '侧向导航'
-            }, {
-              value: 'dingbudaohang',
-              label: '顶部导航'
-            }]
-          }]
-        }, {
-          value: 'zujian',
-          label: '组件',
-          children: [{
-            value: 'basic',
-            label: 'Basic',
-            children: [{
-              value: 'layout',
-              label: 'Layout 布局'
-            }, {
-              value: 'color',
-              label: 'Color 色彩'
-            }, {
-              value: 'typography',
-              label: 'Typography 字体'
-            }, {
-              value: 'icon',
-              label: 'Icon 图标'
-            }, {
-              value: 'button',
-              label: 'Button 按钮'
-            }]
-          }, {
-            value: 'form',
-            label: 'Form',
-            children: [{
-              value: 'radio',
-              label: 'Radio 单选框'
-            }, {
-              value: 'checkbox',
-              label: 'Checkbox 多选框'
-            }, {
-              value: 'input',
-              label: 'Input 输入框'
-            }, {
-              value: 'input-number',
-              label: 'InputNumber 计数器'
-            }, {
-              value: 'select',
-              label: 'Select 选择器'
-            }, {
-              value: 'cascader',
-              label: 'Cascader 级联选择器'
-            }, {
-              value: 'switch',
-              label: 'Switch 开关'
-            }, {
-              value: 'slider',
-              label: 'Slider 滑块'
-            }, {
-              value: 'time-picker',
-              label: 'TimePicker 时间选择器'
-            }, {
-              value: 'date-picker',
-              label: 'DatePicker 日期选择器'
-            }, {
-              value: 'datetime-picker',
-              label: 'DateTimePicker 日期时间选择器'
-            }, {
-              value: 'upload',
-              label: 'Upload 上传'
-            }, {
-              value: 'rate',
-              label: 'Rate 评分'
-            }, {
-              value: 'form',
-              label: 'Form 表单'
-            }]
-          }, {
-            value: 'data',
-            label: 'Data',
-            children: [{
-              value: 'table',
-              label: 'Table 表格'
-            }, {
-              value: 'tag',
-              label: 'Tag 标签'
-            }, {
-              value: 'progress',
-              label: 'Progress 进度条'
-            }, {
-              value: 'tree',
-              label: 'Tree 树形控件'
-            }, {
-              value: 'pagination',
-              label: 'Pagination 分页'
-            }, {
-              value: 'badge',
-              label: 'Badge 标记'
-            }]
-          }, {
-            value: 'notice',
-            label: 'Notice',
-            children: [{
-              value: 'alert',
-              label: 'Alert 警告'
-            }, {
-              value: 'loading',
-              label: 'Loading 加载'
-            }, {
-              value: 'message',
-              label: 'Message 消息提示'
-            }, {
-              value: 'message-box',
-              label: 'MessageBox 弹框'
-            }, {
-              value: 'notification',
-              label: 'Notification 通知'
-            }]
-          }, {
-            value: 'navigation',
-            label: 'Navigation',
-            children: [{
-              value: 'menu',
-              label: 'NavMenu 导航菜单'
-            }, {
-              value: 'tabs',
-              label: 'Tabs 标签页'
-            }, {
-              value: 'breadcrumb',
-              label: 'Breadcrumb 面包屑'
-            }, {
-              value: 'dropdown',
-              label: 'Dropdown 下拉菜单'
-            }, {
-              value: 'steps',
-              label: 'Steps 步骤条'
-            }]
-          }, {
-            value: 'others',
-            label: 'Others',
-            children: [{
-              value: 'dialog',
-              label: 'Dialog 对话框'
-            }, {
-              value: 'tooltip',
-              label: 'Tooltip 文字提示'
-            }, {
-              value: 'popover',
-              label: 'Popover 弹出框'
-            }, {
-              value: 'card',
-              label: 'Card 卡片'
-            }, {
-              value: 'carousel',
-              label: 'Carousel 走马灯'
-            }, {
-              value: 'collapse',
-              label: 'Collapse 折叠面板'
-            }]
-          }]
-        }, {
-          value: 'ziyuan',
-          label: '资源',
-          children: [{
-            value: 'axure',
-            label: 'Axure Components'
-          }, {
-            value: 'sketch',
-            label: 'Sketch Templates'
-          }, {
-            value: 'jiaohu',
-            label: '组件交互文档'
-          }]
-        }]
+      places: [],
+      options:[],
+      form:{
+        name:'',
+        address:'',
+        date:"",
+      }
     }
   },
    created () {
-      // this.$http.get('/api/getTable').then((response) => {
-      //   response = response.data;
-      //   if (response.code === ERR_OK) {
-      //     this.tableData = response.datas;
-      //     console.log(this.tableData);
-      //   }
-      // });
-      // this.$http.get('/api/getOptions').then((response) => {
-      //   response = response.data;
-      //   if (response.code === ERR_OK) {
-      //     this.options = response.datas;
-      //     this.places = response.places;
-      //   }
-      // });
+      this.$http.get('/api/getTable').then((response) => {
+        response = response.data;
+        if (response.code === ERR_OK) {
+          this.tableData = response.datas; //请求过来的表单的内容
+          console.log(this.tableData);
+        }
+      });
+      this.$http.get('/api/getOptions').then((response) => {
+        response = response.data;
+        if (response.code === ERR_OK) {
+          this.options = response.datas;  //请求过来的地址的选项
+          this.places = response.places;  //请求过来的籍贯的数据
+        }
+      });
     },
   methods:{
+    changeValue(){
+      this.$confirm("确认提交吗？","提示",{
+        confirmButtonText:"确认",
+        concelButtonText:"取消",
+        cancelButtonClass:"cancel"
+      }).then(() =>{
+        this.editLoading = true;
+        let date = this.form.date;
+        if(typeof date === "object"){
+          date = [date.getFullYear(),(date.getMonth()+1),(date.getDate())].join("-");
+          this.form.date = date;
+        }
+
+        this.tableData.splice(this.table_index,1,this.form);
+        this.$message({
+          message:"操作成功！",
+          type:"success"
+        });
+        this.editLoading = false;
+        this.dialogFormVisible = false;
+      }).catch(() =>{
+
+      })
+    },
     onSubmit(){
       this.$message("数据模拟，到时候这是一个请求");
     },
     download(){
-      console.log("下载")
+      // console.log("下载")
+      var obj = document.getElementById("download");
+      var str = "姓名,出生日期,地址\n";
+      for(var i = 0; i < this.tableData.length;i++){
+        var item = this.tableData[i];
+        str += item.name + ',' + item.date + "," + item.address;
+      }
+      console.log(obj);
+      str = encodeURIComponent(str);
+      console.log(str);
+      obj.href = "data:text/csv;charset=utf-8,\ufeff"+str;
+      obj.download = "download.csv"
     },
     handleDelete (index, row) {
+        console.log(index.row,2222);
+        alert(1);
         this.tableData.splice(index, 1);
         this.$message({
           message: "操作成功！",

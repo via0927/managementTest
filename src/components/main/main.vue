@@ -84,7 +84,7 @@ html{
     position: absolute;
     padding: 40px;
     /* margin-left: 300px; */
-    background-color: #666666;
+    background-color: #f2f2f2;
     color: #333;
     /* width: 100%; */
     top: 100px;
